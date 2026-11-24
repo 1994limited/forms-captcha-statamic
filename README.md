@@ -4,6 +4,8 @@ A Captcha field for Statamic's forms. Drag it into a form in the forms builder a
 
 It's built on Statamic 6.44's forms (Forms 2): it's a form fieldtype, so it works with Statamic's own field rendering, your own form templates, Blade, multi-page forms and forms sent with `fetch()`.
 
+![Forms Captcha for Statamic](https://raw.githubusercontent.com/1994limited/statamic-marketplace/main/forms-captcha/cover-1600x900.png)
+
 ## Features
 
 - **One field, any provider.** Turnstile, hCaptcha, reCAPTCHA v2 (the "I'm not a robot" checkbox) or reCAPTCHA v3 (no checkbox, a score). Set the provider and keys once in `.env`; change provider later without touching a form or a template.
@@ -12,6 +14,12 @@ It's built on Statamic 6.44's forms (Forms 2): it's a form fieldtype, so it work
 - **Your templates.** `{{ fields }}` shows the widget where the field is. Templates with their own inputs place it with `{{ forms_captcha }}`. Errors are under the field's handle, so `{{ error:captcha }}` works too.
 - **AJAX forms.** After a form posted with `fetch()` or axios gets its response, the widget resets for the next try. reCAPTCHA v3 waits for its token before your submit handler runs.
 - **Safe defaults.** Without keys, or with no driver set, there's no widget and every submission with a Captcha field is refused, so a form is never left open by mistake. On multi-page forms, the Captcha field's page can't be skipped. Precognition never uses up a token. Works with static caching and a Content Security Policy nonce.
+
+| The field in the forms builder | A form with the widget | A submission refused |
+| --- | --- | --- |
+| ![The Captcha field's settings in the forms builder](https://raw.githubusercontent.com/1994limited/statamic-marketplace/main/forms-captcha/charts/cp-builder.png) | ![A form with Cloudflare Turnstile's widget](https://raw.githubusercontent.com/1994limited/statamic-marketplace/main/forms-captcha/charts/site-form.png) | ![The same form refused, with the error under the widget](https://raw.githubusercontent.com/1994limited/statamic-marketplace/main/forms-captcha/charts/site-refused.png) |
+
+The screenshots are from Dog-ear Books, a made-up bookshop: see [the demo](docs/demo.md).
 
 ## Requirements
 
