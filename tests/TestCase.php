@@ -46,7 +46,7 @@ abstract class TestCase extends AddonTestCase
 
     protected function tearDown(): void
     {
-        Form::all()->each(fn ($form) => $form->submissions()->each->delete());
+        Form::all()->each(fn ($form) => $form->querySubmissions()->get()->each->delete());
 
         parent::tearDown();
     }
@@ -79,6 +79,14 @@ abstract class TestCase extends AddonTestCase
                 ],
             ],
         ]))->save();
+    }
+
+    /**
+     * Every submission the form kept, spam and partial ones too.
+     */
+    protected function kept(FormContract $form)
+    {
+        return $form->querySubmissions()->get();
     }
 
     protected function provider(string $url, array $response, int $status = 200): void
