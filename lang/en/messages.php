@@ -13,6 +13,8 @@ return [
     'size' => 'Size',
     'size_normal' => 'Normal',
     'size_compact' => 'Compact',
+    'size_flexible' => 'Full width',
+    'size_instructions' => 'Full width fills the space it\'s given, from 300 pixels up.',
     'low_scores' => 'Low scores',
     'low_scores_instructions' => 'What happens when reCAPTCHA thinks a visitor is probably a bot. Kept as spam, the submission is saved for review (if the form stores submissions) and no emails are sent.',
     'low_scores_reject' => 'Show an error',

@@ -34,7 +34,7 @@ Each Captcha field has its own settings in the builder:
 | --- | --- | --- |
 | Label | all | Shown in the builder and in the Control Panel. The widget is shown without one. |
 | Theme | Turnstile, hCaptcha, reCAPTCHA v2 | Auto (follows light or dark mode), Light or Dark. |
-| Size | Turnstile, hCaptcha, reCAPTCHA v2 | Normal or Compact. |
+| Size | Turnstile, hCaptcha, reCAPTCHA v2 | Normal or Compact. Turnstile also has Full width, which fills the space it's given (from 300 pixels up): the best fit for narrow spaces, such as a sign-up form in a footer. |
 | Low scores | reCAPTCHA v3 | **Show an error**, or **Keep as spam**: the visitor is told it went through, and the submission is kept as spam for review. On a form that doesn't store submissions, it's dropped. |
 
 ## Content Security Policy

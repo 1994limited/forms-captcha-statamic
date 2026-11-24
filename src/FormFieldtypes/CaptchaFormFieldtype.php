@@ -83,12 +83,12 @@ class CaptchaFormFieldtype extends FormFieldtype
                 ],
                 'size' => [
                     'display' => __('forms-captcha::messages.size'),
+                    'instructions' => in_array('flexible', $this->captcha()->sizes(), true) ? __('forms-captcha::messages.size_instructions') : null,
                     'type' => 'button_group',
                     'default' => 'normal',
-                    'options' => [
-                        'normal' => __('forms-captcha::messages.size_normal'),
-                        'compact' => __('forms-captcha::messages.size_compact'),
-                    ],
+                    'options' => collect(['normal', ...$this->captcha()->sizes()])
+                        ->mapWithKeys(fn ($size) => [$size => __('forms-captcha::messages.size_'.$size)])
+                        ->all(),
                 ],
             ];
         }

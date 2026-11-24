@@ -84,6 +84,17 @@ class FieldtypeTest extends TestCase
     }
 
     #[Test]
+    public function turnstiles_sizes_include_full_width()
+    {
+        $this->assertSame(['normal', 'flexible', 'compact'], array_keys($this->formFieldtype()->configFields()->get('size')->config()['options']));
+
+        $this->captchaConfig(['driver' => 'hcaptcha']);
+        Blink::flush();
+
+        $this->assertSame(['normal', 'compact'], array_keys($this->formFieldtype()->configFields()->get('size')->config()['options']));
+    }
+
+    #[Test]
     public function it_has_a_low_scores_setting_for_recaptcha_v3()
     {
         $this->captchaConfig(['driver' => 'recaptcha_v3', 'low_scores' => 'spam']);

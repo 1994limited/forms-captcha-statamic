@@ -185,6 +185,14 @@ class DriversTest extends TestCase
     }
 
     #[Test]
+    public function turnstile_can_fill_the_width_and_the_others_cant()
+    {
+        $this->assertStringContainsString('data-size="flexible"', (new Turnstile(self::CONFIG))->widget(['size' => 'flexible']));
+        $this->assertStringNotContainsString('data-size', (new Hcaptcha(self::CONFIG))->widget(['size' => 'flexible']));
+        $this->assertStringNotContainsString('data-size', (new Recaptcha(self::CONFIG))->widget(['size' => 'flexible']));
+    }
+
+    #[Test]
     public function hcaptcha_sends_the_site_key()
     {
         Http::fake(['https://api.hcaptcha.com/siteverify' => Http::response(['success' => true])]);

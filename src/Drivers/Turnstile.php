@@ -12,6 +12,14 @@ class Turnstile extends SiteverifyCaptcha
         return 'turnstile';
     }
 
+    /**
+     * Flexible fills the width it's given (from 300px up).
+     */
+    public function sizes(): array
+    {
+        return ['flexible', 'compact'];
+    }
+
     public function field(): string
     {
         return 'cf-turnstile-response';

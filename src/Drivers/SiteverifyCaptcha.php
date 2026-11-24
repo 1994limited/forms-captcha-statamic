@@ -62,8 +62,18 @@ abstract class SiteverifyCaptcha implements Captcha
     {
         return [
             'data-theme' => in_array($options['theme'] ?? null, ['light', 'dark'], true) ? $options['theme'] : null,
-            'data-size' => ($options['size'] ?? null) === 'compact' ? 'compact' : null,
+            'data-size' => in_array($options['size'] ?? null, $this->sizes(), true) ? $options['size'] : null,
         ];
+    }
+
+    /**
+     * The sizes the widget comes in, besides normal.
+     *
+     * @return list<string>
+     */
+    public function sizes(): array
+    {
+        return ['compact'];
     }
 
     /**
