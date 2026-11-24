@@ -49,3 +49,7 @@ Everything else is in [the documentation](docs/README.md):
 ## Support
 
 Email [hello@1994.co.uk](mailto:hello@1994.co.uk), or [open an issue on GitHub](https://github.com/1994limited/forms-captcha-statamic/issues).
+
+## Licence
+
+Forms Captcha is free and open source, under the [MIT licence](LICENSE.md).
