@@ -44,7 +44,7 @@ Everything else is in [the documentation](docs/README.md):
 - [Installation](docs/installation.md) and [configuration](docs/configuration.md)
 - [Templates](docs/templates.md) and [JavaScript](docs/javascript.md)
 - [Low scores and spam](docs/spam.md), the [PHP API](docs/php-api.md) and [troubleshooting](docs/troubleshooting.md)
-- [Coming from aryehraber/statamic-captcha](docs/migrating.md)
+- [Coming from aryehraber/statamic-captcha](docs/migrating.md) and [the demo](docs/demo.md)
 
 ## Support
 

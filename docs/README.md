@@ -18,3 +18,4 @@ Forms Captcha adds a Captcha field to Statamic's forms: Cloudflare Turnstile, hC
 6. [PHP API](php-api.md): checking a token yourself, and custom drivers.
 7. [Coming from aryehraber/statamic-captcha](migrating.md): moving a site over.
 8. [Troubleshooting](troubleshooting.md): common problems and fixes.
+9. [The demo](demo.md): Dog-ear Books, a site to try it on.
