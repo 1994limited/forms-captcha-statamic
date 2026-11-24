@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 (2026-11-24)
 
 ### Added
 - Free and open source, under the MIT licence.
