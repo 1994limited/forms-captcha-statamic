@@ -3,6 +3,7 @@
 namespace NineteenNinetyFour\FormsCaptcha\Tests\Feature;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use NineteenNinetyFour\FormsCaptcha\Contracts\Captcha as CaptchaContract;
 use NineteenNinetyFour\FormsCaptcha\Drivers\NullCaptcha;
@@ -29,11 +30,34 @@ class ManagerTest extends TestCase
     }
 
     #[Test]
-    public function no_driver_is_the_null_driver()
+    public function a_blank_driver_is_turnstile_so_forms_stay_protected()
     {
-        $this->captchaConfig(['driver' => null]);
+        foreach ([null, ''] as $driver) {
+            $this->captchaConfig(['driver' => $driver]);
 
-        $this->assertInstanceOf(NullCaptcha::class, Captcha::driver());
+            $this->assertInstanceOf(Turnstile::class, Captcha::driver());
+        }
+    }
+
+    #[Test]
+    public function none_and_null_are_the_null_driver()
+    {
+        foreach (['none', 'null'] as $driver) {
+            $this->captchaConfig(['driver' => $driver]);
+
+            $this->assertInstanceOf(NullCaptcha::class, Captcha::driver());
+        }
+    }
+
+    #[Test]
+    public function the_null_driver_warns_in_production()
+    {
+        Log::spy();
+        $this->app['env'] = 'production';
+
+        (new NullCaptcha)->verify(null);
+
+        Log::shouldHaveReceived('warning')->once();
     }
 
     #[Test]

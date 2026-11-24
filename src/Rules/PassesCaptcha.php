@@ -5,7 +5,7 @@ namespace NineteenNinetyFour\FormsCaptcha\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use NineteenNinetyFour\FormsCaptcha\CaptchaManager;
-use NineteenNinetyFour\FormsCaptcha\Spam;
+use NineteenNinetyFour\FormsCaptcha\Outcome;
 
 use function Statamic\trans as __;
 
@@ -39,11 +39,13 @@ class PassesCaptcha implements ValidationRule
         $verification = $captcha->verify($this->token($value, $captcha->driver()->field()), $request->ip());
 
         if ($verification->passed) {
+            Outcome::record($request, Outcome::PASSED);
+
             return;
         }
 
         if ($verification->lowScore && $this->lowScores === 'spam') {
-            Spam::flag($request, $verification);
+            Outcome::record($request, Outcome::SPAM);
 
             return;
         }

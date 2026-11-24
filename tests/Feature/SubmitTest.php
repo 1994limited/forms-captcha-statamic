@@ -242,6 +242,76 @@ class SubmitTest extends TestCase
     }
 
     #[Test]
+    public function a_blank_driver_setting_doesnt_leave_the_form_open()
+    {
+        $this->captchaConfig(['driver' => '', 'site_key' => null, 'secret_key' => null]);
+        $form = $this->contactForm();
+        Http::fake();
+
+        $this->post($form->actionUrl(), ['email' => 'ada@example.com'])->assertSessionHasErrorsIn('form.contact', ['captcha']);
+
+        $this->assertCount(0, $this->kept($form));
+    }
+
+    private function captchaFirst(): \Statamic\Contracts\Forms\Form
+    {
+        return tap(Form::make('signup')->title('Sign up')->store(true)->formFields([
+            'pages' => [
+                ['id' => 'one', 'sections' => [['fields' => [
+                    ['handle' => 'captcha', 'field' => ['type' => 'captcha', 'low_scores' => 'spam']],
+                ]]]],
+                ['id' => 'two', 'sections' => [['fields' => [
+                    ['handle' => 'email', 'field' => ['type' => 'email', 'validate' => ['required']]],
+                ]]]],
+            ],
+        ]))->save();
+    }
+
+    #[Test]
+    public function a_captcha_on_an_earlier_page_cant_be_skipped()
+    {
+        $form = $this->captchaFirst();
+        Http::fake();
+
+        // Straight to the last page, without ever posting the captcha's page.
+        $this->post($form->actionUrl(), ['_page' => 'two', 'email' => 'bot@example.com'])
+            ->assertSessionHasErrorsIn('form.signup', ['captcha']);
+
+        Http::assertNothingSent();
+        $this->assertCount(0, $this->kept($form)->reject->isPartial());
+    }
+
+    #[Test]
+    public function a_captcha_on_an_earlier_page_counts_once_it_has_passed()
+    {
+        $form = $this->captchaFirst();
+        $this->provider(self::TURNSTILE, ['success' => true]);
+
+        $this->post($form->actionUrl(), ['_page' => 'one', 'cf-turnstile-response' => 'the-token'])->assertSessionHasNoErrors();
+        $this->post($form->actionUrl(), ['_page' => 'two', 'email' => 'ada@example.com'])->assertSessionHasNoErrors();
+
+        $this->assertCount(1, $form->submissions());
+
+        // Used up by that submission: the next one has to pass again.
+        $this->post($form->actionUrl(), ['_page' => 'two', 'email' => 'bot@example.com'])
+            ->assertSessionHasErrorsIn('form.signup', ['captcha']);
+    }
+
+    #[Test]
+    public function a_low_score_on_an_earlier_page_still_makes_spam()
+    {
+        $this->captchaConfig(['driver' => 'recaptcha_v3']);
+        $form = $this->captchaFirst();
+        $this->provider(self::RECAPTCHA, ['success' => true, 'score' => 0.1, 'action' => 'submit']);
+
+        $this->post($form->actionUrl(), ['_page' => 'one', 'g-recaptcha-response' => 'the-token'])->assertSessionHasNoErrors();
+        $this->post($form->actionUrl(), ['_page' => 'two', 'email' => 'bot@example.com'])->assertSessionHasNoErrors();
+
+        $this->assertCount(0, $form->submissions());
+        $this->assertTrue($this->kept($form)->first()->isSpam());
+    }
+
+    #[Test]
     public function on_a_multi_page_form_the_captcha_is_checked_on_its_own_page()
     {
         $form = tap(Form::make('enquiry')->title('Enquiry')->store(true)->formFields([

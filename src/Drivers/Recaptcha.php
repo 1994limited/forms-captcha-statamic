@@ -21,9 +21,4 @@ class Recaptcha extends SiteverifyCaptcha
     {
         return 'https://www.google.com/recaptcha/api/siteverify';
     }
-
-    protected function scriptUrl(): string
-    {
-        return 'https://www.google.com/recaptcha/api.js?render=explicit';
-    }
 }

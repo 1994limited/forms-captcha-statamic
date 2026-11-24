@@ -10,7 +10,9 @@ return [
     | The captcha every Captcha field uses: "turnstile", "hcaptcha",
     | "recaptcha" (v2, the "I'm not a robot" checkbox), "recaptcha_v3" or
     | "null". The null driver shows nothing and lets everything through,
-    | for local development and tests.
+    | for local development and tests. In .env, use "none" for it: env()
+    | reads "null" as no value. No value at all is "turnstile", so a form
+    | is never left open by a missing setting.
     |
     */
 

@@ -2,6 +2,7 @@
 
 namespace NineteenNinetyFour\FormsCaptcha\Drivers;
 
+use Illuminate\Support\Facades\Log;
 use NineteenNinetyFour\FormsCaptcha\Contracts\Captcha;
 use NineteenNinetyFour\FormsCaptcha\Verification;
 
@@ -17,6 +18,10 @@ class NullCaptcha implements Captcha
 
     public function verify(?string $token, ?string $ip = null): Verification
     {
+        if (app()->isProduction()) {
+            Log::warning('Forms Captcha is using the null driver in production, so captchas are not being checked. Set FORMS_CAPTCHA_DRIVER.');
+        }
+
         return Verification::passed();
     }
 

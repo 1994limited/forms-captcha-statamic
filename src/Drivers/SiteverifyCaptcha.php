@@ -26,16 +26,12 @@ abstract class SiteverifyCaptcha implements Captcha
     }
 
     /**
-     * The handle the front-end script knows the provider by.
+     * The handle the front-end script knows the provider by. The script loads each
+     * provider's own script from a URL of its own, never one from the page.
      */
     abstract public function handle(): string;
 
     abstract protected function endpoint(): string;
-
-    /**
-     * The provider's script, loaded once a page has a widget on it.
-     */
-    abstract protected function scriptUrl(): string;
 
     public function configured(): bool
     {
@@ -51,7 +47,6 @@ abstract class SiteverifyCaptcha implements Captcha
         $attributes = array_filter([
             'data-forms-captcha' => $this->handle(),
             'data-sitekey' => $this->siteKey(),
-            'data-src' => $this->scriptUrl(),
             ...$this->widgetAttributes($options),
         ], fn ($value) => $value !== null && $value !== '');
 

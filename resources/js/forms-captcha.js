@@ -9,6 +9,9 @@
     var providers = {
         turnstile: {
             global: 'turnstile',
+            src: function () {
+                return 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            },
             render: function (api, el) {
                 return api.render(el, options(el));
             },
@@ -18,6 +21,9 @@
         },
         hcaptcha: {
             global: 'hcaptcha',
+            src: function () {
+                return 'https://js.hcaptcha.com/1/api.js?render=explicit';
+            },
             render: function (api, el) {
                 return api.render(el, options(el));
             },
@@ -27,6 +33,9 @@
         },
         recaptcha: {
             global: 'grecaptcha',
+            src: function () {
+                return 'https://www.google.com/recaptcha/api.js?render=explicit';
+            },
             render: function (api, el) {
                 return api.render(el, options(el));
             },
@@ -37,6 +46,9 @@
         recaptcha_v3: {
             global: 'grecaptcha',
             ready: true,
+            src: function (el) {
+                return 'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent(el.dataset.sitekey);
+            },
             render: function () {
                 return 'v3';
             },
@@ -49,6 +61,12 @@
     var loading = {};
     var waiting = {};
     var nonce = document.currentScript && document.currentScript.nonce;
+
+    // Only these providers, from these URLs: the page's markup can't point the loader anywhere else.
+    function provider(el) {
+        var kind = el.dataset.formsCaptcha;
+        return Object.prototype.hasOwnProperty.call(providers, kind) ? providers[kind] : null;
+    }
 
     function options(el) {
         var o = { sitekey: el.dataset.sitekey };
@@ -64,10 +82,10 @@
     // Loads a provider's script once, then calls back for every widget waiting on it.
     function load(el, callback) {
         var kind = el.dataset.formsCaptcha;
-        var provider = providers[kind];
-        var api = window[provider.global];
+        var p = provider(el);
+        var api = window[p.global];
 
-        if (api && (provider.ready ? api.execute : api.render)) return callback(api);
+        if (api && (p.ready ? api.execute : api.render)) return callback(api);
 
         (waiting[kind] = waiting[kind] || []).push(callback);
 
@@ -76,17 +94,17 @@
 
         var name = 'formsCaptchaLoaded_' + kind;
         window[name] = function () {
-            var api = window[provider.global];
+            var api = window[p.global];
             var done = function () {
                 (waiting[kind] || []).splice(0).forEach(function (cb) {
                     cb(api);
                 });
             };
-            provider.ready ? api.ready(done) : done();
+            p.ready ? api.ready(done) : done();
         };
 
         var script = document.createElement('script');
-        script.src = el.dataset.src + (el.dataset.src.indexOf('?') === -1 ? '?' : '&') + 'onload=' + name;
+        script.src = p.src(el) + '&onload=' + name;
         script.async = true;
         script.defer = true;
         if (nonce) script.nonce = nonce;
@@ -133,6 +151,7 @@
                         },
                         function () {
                             form.formsCaptchaPending = false;
+                            form.dispatchEvent(new CustomEvent('forms-captcha:error', { bubbles: true }));
                         },
                     );
                 });
@@ -143,14 +162,14 @@
 
     function render(root) {
         (root || document).querySelectorAll('[data-forms-captcha]').forEach(function (el) {
-            var provider = providers[el.dataset.formsCaptcha];
-            if (!provider || el.formsCaptchaId !== undefined || el.formsCaptchaRendering) return;
+            var p = provider(el);
+            if (!p || el.formsCaptchaId !== undefined || el.formsCaptchaRendering) return;
             el.formsCaptchaRendering = true;
 
             if (el.dataset.formsCaptcha === 'recaptcha_v3') watchSubmit(el);
 
             load(el, function (api) {
-                el.formsCaptchaId = provider.render(api, el);
+                el.formsCaptchaId = p.render(api, el);
                 el.formsCaptchaRendering = false;
             });
         });
@@ -162,33 +181,44 @@
         var els = root.matches && root.matches('[data-forms-captcha]') ? [root] : root.querySelectorAll('[data-forms-captcha]');
 
         Array.prototype.forEach.call(els, function (el) {
-            var provider = providers[el.dataset.formsCaptcha];
-            var api = provider && window[provider.global];
+            var p = provider(el);
+            var api = p && window[p.global];
             if (!api || el.formsCaptchaId === undefined) return;
             try {
-                provider.reset(api, el.formsCaptchaId, el);
+                p.reset(api, el.formsCaptchaId, el);
             } catch (e) {}
         });
     }
 
     // Forms posted with fetch() or XMLHttpRequest (axios uses it) reset their captcha when the
     // response comes back. Precognition requests don't check the captcha, so they're left alone.
+    // Never throws: it runs before every fetch() and XMLHttpRequest on the page.
     function formsFor(url) {
-        var href;
         try {
-            href = new URL(url, location.href).href.split('#')[0];
+            var href = absolute(url);
+
+            return Array.prototype.filter.call(document.forms, function (form) {
+                // getAttribute, as a field named "action" would hide form.action.
+                var action = form.getAttribute('action');
+                return action && absolute(action) === href && form.querySelector('[data-forms-captcha]');
+            });
         } catch (e) {
             return [];
         }
+    }
 
-        return Array.prototype.filter.call(document.forms, function (form) {
-            return form.action.split('#')[0] === href && form.querySelector('[data-forms-captcha]');
-        });
+    function absolute(url) {
+        return new URL(url, location.href).href.split('#')[0];
     }
 
     function precognitive(headers) {
         if (!headers) return false;
         if (typeof Headers !== 'undefined' && headers instanceof Headers) return headers.has('Precognition');
+        if (Array.isArray(headers)) {
+            return headers.some(function (pair) {
+                return String(pair[0]).toLowerCase() === 'precognition';
+            });
+        }
         return Object.keys(headers).some(function (name) {
             return name.toLowerCase() === 'precognition';
         });

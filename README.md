@@ -11,7 +11,7 @@ It's built on Statamic 6.44's forms (Forms 2): it's a form fieldtype, so it work
 - **Low scores as spam.** With reCAPTCHA v3, choose per field whether a low score shows an error or keeps the submission as spam. Spam is kept for review (if the form stores submissions), and no emails or connections are sent for it.
 - **Your templates.** `{{ fields }}` shows the widget where the field is. Templates with their own inputs place it with `{{ forms_captcha }}`. Errors are under the field's handle, so `{{ error:captcha }}` works too.
 - **AJAX forms.** After a form posted with `fetch()` or axios gets its response, the widget resets for the next try. reCAPTCHA v3 waits for its token before your submit handler runs.
-- **Safe defaults.** Without keys there's no widget, and every submission with a Captcha field is refused, so a form is never left open by mistake. Precognition never uses up a token. Works with static caching and a Content Security Policy nonce.
+- **Safe defaults.** Without keys, or with no driver set, there's no widget and every submission with a Captcha field is refused, so a form is never left open by mistake. On multi-page forms, the Captcha field's page can't be skipped. Precognition never uses up a token. Works with static caching and a Content Security Policy nonce.
 
 ## Requirements
 
@@ -31,11 +31,11 @@ FORMS_CAPTCHA_SITE_KEY=
 FORMS_CAPTCHA_SECRET_KEY=
 ```
 
-`FORMS_CAPTCHA_DRIVER` is `turnstile`, `hcaptcha`, `recaptcha` (v2 checkbox), `recaptcha_v3` or `null`. The null driver shows nothing and lets everything through: use it for local development if you don't want to use your provider's test keys.
+`FORMS_CAPTCHA_DRIVER` is `turnstile`, `hcaptcha`, `recaptcha` (v2 checkbox), `recaptcha_v3` or `none`. `none` shows nothing and lets everything through: use it for local development if you don't want to use your provider's test keys. It logs a warning if it's used in production. A blank setting counts as `turnstile`, so a missing setting never leaves a form open.
 
 Open a form in the Control Panel, drag **Captcha** from the field list (it's under Structure) into the form, and save. That's it: the form now shows the widget, and checks it.
 
-Put the field on the last page of a multi-page form. It's checked on the page it's on.
+On a multi-page form, the field is checked on the page it's on, and the submission can't be finished until it has passed. The last page is the best place for it: the visitor has done the work by then, and a reCAPTCHA v3 token is fetched as that page is sent.
 
 ## Configuration
 
@@ -48,7 +48,7 @@ php artisan vendor:publish --tag=forms-captcha-config
 ```php
 // config/forms-captcha.php
 return [
-    'driver' => env('FORMS_CAPTCHA_DRIVER', 'turnstile'),
+    'driver' => env('FORMS_CAPTCHA_DRIVER', 'turnstile'), // or 'null' here, 'none' in .env
     'site_key' => env('FORMS_CAPTCHA_SITE_KEY'),
     'secret_key' => env('FORMS_CAPTCHA_SECRET_KEY'),
 
@@ -165,7 +165,11 @@ form.addEventListener('submit', async (event) => {
 });
 ```
 
-With reCAPTCHA v3 the token is fetched from Google as the form is submitted. Forms Captcha's submit listener runs before yours, holds the event until the token is in the form, then submits again, so your handler only ever sees a form with its token.
+With reCAPTCHA v3 the token is fetched from Google as the form is submitted. Forms Captcha's submit listener runs before yours, holds the event until the token is in the form, then submits again, so your handler only ever sees a form with its token. If Google can't be reached, the form isn't sent and a `forms-captcha:error` event is dispatched on it, so you can tell the visitor:
+
+```js
+form.addEventListener('forms-captcha:error', () => showError('Please try again in a moment.'));
+```
 
 If you post somewhere other than the form's `action`, or add forms to the page after it loads, use the JavaScript API:
 
@@ -178,7 +182,7 @@ Precognition requests (`$form.validate()` with Alpine) don't check the captcha, 
 
 ## Content Security Policy
 
-The widget is a few attributes and a small inline script, which loads the provider's own script once. If you use Laravel's `Vite::useCspNonce()`, the script gets the nonce. Allow your provider's domains too:
+The widget is a few attributes and a small inline script, which loads the provider's own script once, from the provider's own URL (never one taken from the page). If you use Laravel's `Vite::useCspNonce()`, the script gets the nonce. Allow your provider's domains too:
 
 - Turnstile: `https://challenges.cloudflare.com` (script-src, frame-src)
 - hCaptcha: `https://hcaptcha.com`, `https://*.hcaptcha.com` (script-src, frame-src, style-src, connect-src)

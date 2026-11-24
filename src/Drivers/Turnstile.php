@@ -21,9 +21,4 @@ class Turnstile extends SiteverifyCaptcha
     {
         return 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
     }
-
-    protected function scriptUrl(): string
-    {
-        return 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    }
 }

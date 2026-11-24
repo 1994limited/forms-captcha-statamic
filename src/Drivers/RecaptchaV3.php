@@ -17,11 +17,6 @@ class RecaptchaV3 extends Recaptcha
         return 'recaptcha_v3';
     }
 
-    protected function scriptUrl(): string
-    {
-        return 'https://www.google.com/recaptcha/api.js?render='.rawurlencode($this->siteKey());
-    }
-
     protected function widgetAttributes(array $options): array
     {
         return ['data-action' => $this->action()];

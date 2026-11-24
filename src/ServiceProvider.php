@@ -4,8 +4,8 @@ namespace NineteenNinetyFour\FormsCaptcha;
 
 use NineteenNinetyFour\FormsCaptcha\Fieldtypes\CaptchaFieldtype;
 use NineteenNinetyFour\FormsCaptcha\FormFieldtypes\CaptchaFormFieldtype;
+use NineteenNinetyFour\FormsCaptcha\Listeners\CheckCaptchaOutcome;
 use NineteenNinetyFour\FormsCaptcha\Listeners\ForgetCaptchaFields;
-use NineteenNinetyFour\FormsCaptcha\Listeners\MarkLowScoresAsSpam;
 use NineteenNinetyFour\FormsCaptcha\Tags\FormsCaptcha;
 use Statamic\Events\FormSubmitted;
 use Statamic\Events\SubmissionSaving;
@@ -20,7 +20,7 @@ class ServiceProvider extends AddonServiceProvider
     protected $tags = [FormsCaptcha::class];
 
     protected $listen = [
-        FormSubmitted::class => [MarkLowScoresAsSpam::class],
+        FormSubmitted::class => [CheckCaptchaOutcome::class],
         SubmissionSaving::class => [ForgetCaptchaFields::class],
     ];
 

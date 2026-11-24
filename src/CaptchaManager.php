@@ -15,9 +15,20 @@ use Statamic\Support\Manager;
  */
 class CaptchaManager extends Manager
 {
+    /**
+     * A blank driver is Turnstile, which without keys refuses every submission, so a
+     * missing setting never leaves forms open. "none" (or "null" in the config file)
+     * is the null driver: env() reads FORMS_CAPTCHA_DRIVER=null as no value at all.
+     */
     public function getDefaultDriver()
     {
-        return $this->app['config']['forms-captcha.driver'] ?: 'null';
+        $driver = $this->app['config']['forms-captcha.driver'];
+
+        if ($driver === 'none') {
+            return 'null';
+        }
+
+        return is_string($driver) && $driver !== '' ? $driver : 'turnstile';
     }
 
     protected function getConfig($name)

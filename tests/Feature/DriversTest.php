@@ -158,10 +158,11 @@ class DriversTest extends TestCase
         $widget = (new $class(self::CONFIG))->widget();
         $handle = (new $class(self::CONFIG))->handle();
 
-        $this->assertStringStartsWith(
-            '<div data-forms-captcha="'.$handle.'" data-sitekey="site-key" data-src="'.htmlspecialchars($script).'"></div><script>',
-            $widget,
-        );
+        $this->assertStringStartsWith('<div data-forms-captcha="'.$handle.'" data-sitekey="site-key"></div><script>', $widget);
+
+        // The loader knows each provider's script URL itself, so markup on the page can't change it.
+        $this->assertStringNotContainsString('data-src', $widget);
+        $this->assertStringContainsString("'".$script."'", SiteverifyCaptcha::loaderScript());
         $this->assertStringEndsWith('</script>', $widget);
     }
 
@@ -209,6 +210,17 @@ class DriversTest extends TestCase
         $this->assertStringNotContainsString('<', SiteverifyCaptcha::loaderScript());
         $this->assertStringStartsWith('(function () {'."\n".'if (window.FormsCaptcha) {', SiteverifyCaptcha::loaderScript());
         $this->assertStringNotContainsString('// ', SiteverifyCaptcha::loaderScript());
+    }
+
+    #[Test]
+    public function the_loader_only_loads_known_providers_and_never_breaks_other_requests()
+    {
+        $script = SiteverifyCaptcha::loaderScript();
+
+        $this->assertStringContainsString('Object.prototype.hasOwnProperty.call(providers, kind)', $script);
+        $this->assertStringNotContainsString('dataset.src', $script);
+        $this->assertStringContainsString("form.getAttribute('action')", $script);
+        $this->assertStringNotContainsString('form.action', $script);
     }
 
     #[Test]
@@ -281,7 +293,7 @@ class DriversTest extends TestCase
         $widget = (new RecaptchaV3([...self::CONFIG, 'action' => 'contact']))->widget(['theme' => 'dark']);
 
         $this->assertStringStartsWith(
-            '<div data-forms-captcha="recaptcha_v3" data-sitekey="site-key" data-src="https://www.google.com/recaptcha/api.js?render=site-key" data-action="contact"><input type="hidden" name="g-recaptcha-response" value=""></div><script>',
+            '<div data-forms-captcha="recaptcha_v3" data-sitekey="site-key" data-action="contact"><input type="hidden" name="g-recaptcha-response" value=""></div><script>',
             $widget,
         );
     }
@@ -293,7 +305,7 @@ class DriversTest extends TestCase
 
         $this->assertStringNotContainsString("<script>alert('x')</script>", $widget);
         $this->assertSame(1, substr_count($widget, '</script>'));
-        $this->assertStringContainsString('api.js?render=%3C%2Fscript%3E', $widget);
+        $this->assertStringContainsString("'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent(el.dataset.sitekey)", $widget);
     }
 
     #[Test]
@@ -305,7 +317,7 @@ class DriversTest extends TestCase
         $this->assertStringContainsString("document.addEventListener(\n'submit',", $script);
         $this->assertStringContainsString('event.stopImmediatePropagation();', $script);
         $this->assertStringContainsString('api.execute(el.dataset.sitekey, { action: el.dataset.action })', $script);
-        $this->assertStringContainsString('provider.ready ? api.ready(done) : done();', $script);
+        $this->assertStringContainsString('p.ready ? api.ready(done) : done();', $script);
     }
 
     #[Test]

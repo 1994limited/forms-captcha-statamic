@@ -19,11 +19,6 @@ class Hcaptcha extends SiteverifyCaptcha
         return 'https://api.hcaptcha.com/siteverify';
     }
 
-    protected function scriptUrl(): string
-    {
-        return 'https://js.hcaptcha.com/1/api.js?render=explicit';
-    }
-
     protected function payload(string $token, ?string $ip): array
     {
         return parent::payload($token, $ip) + ['sitekey' => $this->siteKey()];
